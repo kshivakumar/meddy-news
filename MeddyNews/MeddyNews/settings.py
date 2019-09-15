@@ -120,3 +120,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+REDDIT_USERNAME = os.environ['REDDIT_USERNAME']
+REDDIT_PASSWORD = os.environ['REDDIT_PASSWORD']
+REDDIT_CLIENTID = os.environ['REDDIT_CLIENTID']
+REDDIT_SECRET = os.environ['REDDIT_SECRET']
+
+NEWSAPI_TOKEN = os.environ['NEWSAPI_TOKEN']
