@@ -23,7 +23,7 @@ def get_news(request):
     except NotImplementedError as e:
         data = 'Error: ' + str(e)
         status = HTTP_500_INTERNAL_SERVER_ERROR
-    except:
+    except:  # noqa: E722
         data = 'Something went wrong, please try again'
         status = HTTP_500_INTERNAL_SERVER_ERROR
 
@@ -33,7 +33,8 @@ def get_news(request):
 def get_aggregated_news(query=None, item_count=5):
     if item_count > 50:
         raise NotImplementedError(
-            'Maximum no. of news items that can be fetched in a single request: <= 50, '
+            'Maximum no. of news items that can be fetched in a '
+            'single request: <= 50, '
             'Count requested: {}'.format(item_count))
 
     reddit_generator = get_news_from_reddit(query)
@@ -118,10 +119,14 @@ def _get_reddit_token():
     secret = settings.REDDIT_SECRET
 
     client_auth = requests.auth.HTTPBasicAuth(client_id, secret)
-    post_data = {"grant_type": "password", "username": username, "password": password}
+    post_data = {
+        "grant_type": "password",
+        "username": username,
+        "password": password
+    }
     headers = {"User-Agent": USER_AGENT}
-    response = requests.post("https://www.reddit.com/api/v1/access_token", auth=client_auth,
-                             data=post_data, headers=headers)
+    response = requests.post("https://www.reddit.com/api/v1/access_token",
+                             auth=client_auth, data=post_data, headers=headers)
 
     print("RedditAPI token response: ", response.status_code)
     token = response.json()['access_token']
