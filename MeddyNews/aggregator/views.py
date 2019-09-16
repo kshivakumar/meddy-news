@@ -1,10 +1,11 @@
 """Aggregator Views"""
 
+import itertools
 from collections import OrderedDict
 
 import requests
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from rest_framework.status import HTTP_500_INTERNAL_SERVER_ERROR, HTTP_200_OK
 
 from django.conf import settings
@@ -38,18 +39,15 @@ def get_aggregated_news(query=None, item_count=5):
     reddit_generator = get_news_from_reddit(query)
     newsapi_generator = get_news_from_newsapi(query)
 
+    generators = itertools.cycle([reddit_generator, newsapi_generator])
+
     news = []
     links = []  # To discard news items listed by both reddit and newsapi
-    while len(news) <= item_count:
-        reddit_item = next(reddit_generator)
-        if reddit_item['link'] not in links:
-            news.append(reddit_item)
-            links.append(reddit_item['link'])
-
-        newsapi_item = next(newsapi_generator)
-        if newsapi_item['link'] not in links:
-            news.append(newsapi_item)
-            links.append(newsapi_item['link'])
+    while len(news) < item_count:
+        news_item = next(next(generators))
+        if news_item['link'] not in links:
+            news.append(news_item)
+            links.append(news_item['link'])
 
     return news
 
