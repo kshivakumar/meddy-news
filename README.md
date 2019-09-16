@@ -8,6 +8,7 @@ Assignment by Meddy.com for Python developer role.
 3. `cd` into the project directory(MeddyNews)  
 4. Configure Database - `python manage.py migrate` 
 5. Create superuser - `python manage.py createsuperuser` 
+6. Add environment variables. See the Credentials section.
 6. Start Django Dev Server - `python manage.py runserver 0:8000`  
 
 Optional:  
@@ -21,3 +22,14 @@ When hitting the api for the first time, you will be asked for username and pass
 
 2. Using cURL  
 `curl -X GET -H 'Content-Type: application/json' -H "Authorization: Basic $(echo -n <username>:<password> | base64)" http://localhost:8000/news/`
+
+**Credentials**  
+REDDIT_USERNAME="skmycom"  
+REDDIT_PASSWORD="DF@#a14saf43"  
+REDDIT_CLIENTID="jwqgfZ80XhQL8A"  
+REDDIT_SECRET="CFmynsMi7tNdEo98arPy2YN9eDA"  
+
+NEWSAPI_TOKEN="86df486541ca48c9806dfb3862beb1f4"
+
+Note:   
+A temp email was used for creating reddit and newapi accounts.
