@@ -5,33 +5,68 @@ from collections import OrderedDict
 import requests
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.status import HTTP_500_INTERNAL_SERVER_ERROR, HTTP_200_OK
 
 from django.conf import settings
 
 
+USER_AGENT = "Python:meddy-assignment:v0.1 (by Shiva Kumar)"
+
+
 @api_view(['GET'])
 def get_news(request):
-    query_params = request.query_params
-    if query_params:
-        return Response('News Search')
-    # latest news
-    return Response('Latest News')
+    query = request.query_params.get('query', None)
+    try:
+        data = get_aggregated_news(query)
+        status = HTTP_200_OK
+    except NotImplementedError as e:
+        data = 'Error: ' + str(e)
+        status = HTTP_500_INTERNAL_SERVER_ERROR
+    except:
+        data = 'Something went wrong, please try again'
+        status = HTTP_500_INTERNAL_SERVER_ERROR
+
+    return Response(data=data, status=status)
+
+
+def get_aggregated_news(query=None, item_count=5):
+    if item_count > 50:
+        raise NotImplementedError(
+            'Maximum no. of news items that can be fetched in a single request: <= 50, '
+            'Count requested: {}'.format(item_count))
+
+    reddit_generator = get_news_from_reddit(query)
+    newsapi_generator = get_news_from_newsapi(query)
+
+    news = []
+    links = []  # To discard news items listed by both reddit and newsapi
+    while len(news) <= item_count:
+        reddit_item = next(reddit_generator)
+        if reddit_item['link'] not in links:
+            news.append(reddit_item)
+            links.append(reddit_item['link'])
+
+        newsapi_item = next(newsapi_generator)
+        if newsapi_item['link'] not in links:
+            news.append(newsapi_item)
+            links.append(newsapi_item['link'])
+
+    return news
 
 
 def get_news_from_reddit(query=None):
     token = _get_reddit_token()
     headers = {"Authorization": "bearer {}".format(token),
-               "User-Agent": "ShivaMeddy/1.0"}
-    base_url = "https://oauth.reddit.com/r/news/"
+               "User-Agent": USER_AGENT}
 
-    if query:
-        response = requests.get(base_url + "search?q={}".format(query), headers=headers)
-    else:
-        response = requests.get(base_url + "new", headers=headers)
+    base_url = "https://oauth.reddit.com/r/news/"
+    url = base_url + ("search?q={}".format(query) if query else "new")
+
+    response = requests.get(url, headers=headers)
 
     results = response.json()['data']['children']  # 25 items
+    print("RedditAPI response: ", response.status_code)
 
-    news_items = []
     for item in results:
         data = item['data']
 
@@ -40,38 +75,43 @@ def get_news_from_reddit(query=None):
         news_item['link'] = data['url']
         news_item['source'] = 'reddit'
 
-        news_items.append(news_item)
-
-    return news_items
+        yield news_item
 
 
 def get_news_from_newsapi(query=None):
     token = _get_newsapi_token()
 
+    query_params = {
+        'language': 'en',
+        'apiKey': token,
+        'sortBy': 'publishedAt',
+        'pageSize': 25
+    }
+
+    base_url = "https://newsapi.org/v2/"
     if query:
-        url = "https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&qInTitle={0}&apiKey&pageSize=25={1}".format(query, token)
+        url = base_url + "everything?"
+        query_params['qInTitle'] = query
     else:
-        url = "https://newsapi.org/v2/top-headlines?language=en&sortBy=publishedAt&apiKey={}&pageSize=25".format(token)
+        url = base_url + "top-headlines?"
 
-    headers = {"User-Agent": "ShivaMeddy/1.0"}
+    url = url + "&".join('{}={}'.format(k, v) for k, v in query_params.items())
+
+    headers = {"User-Agent": USER_AGENT}
     response = requests.get(url, headers=headers)
-
+    print("NewsAPI response: ", response.status_code)
     results = response.json()['articles']
 
-    news_items = []
     for item in results:
         news_item = OrderedDict()
         news_item['headline'] = item['title']
         news_item['link'] = item['url']
         news_item['source'] = 'newsapi'
 
-        news_items.append(news_item)
-
-    return news_items
+        yield news_item
 
 
 def _get_reddit_token():
-    """Get Reddit Token"""
 
     username = settings.REDDIT_USERNAME
     password = settings.REDDIT_PASSWORD
@@ -81,10 +121,11 @@ def _get_reddit_token():
 
     client_auth = requests.auth.HTTPBasicAuth(client_id, secret)
     post_data = {"grant_type": "password", "username": username, "password": password}
-    headers = {"User-Agent": "ShivaMeddy/1.0"}
+    headers = {"User-Agent": USER_AGENT}
     response = requests.post("https://www.reddit.com/api/v1/access_token", auth=client_auth,
                              data=post_data, headers=headers)
 
+    print("RedditAPI token response: ", response.status_code)
     token = response.json()['access_token']
     return token
 
