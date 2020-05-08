@@ -2,10 +2,12 @@
 
 from unittest import mock
 
-from django.test import TestCase
-from rest_framework.test import APITestCase
+from django.test import SimpleTestCase, Client
 
 from . import views
+
+
+client = Client()
 
 
 class MockedResponse:
@@ -17,34 +19,34 @@ class MockedResponse:
         return self.json_data
 
 
-class AggregatedNewsAPITest(APITestCase):
+class AggregatedNewsAPITest(SimpleTestCase):
 
     @mock.patch('aggregator.views.get_aggregated_news')
     def test_get_aggregated_news(self, mock_agg_news):
         mock_agg_news.return_value = {'ok': 'good'}
-        response = self.client.get('/news/')
+        response = client.get('/news/')
 
-        assert response.data == {'ok': 'good'}
+        assert response.json() == {'news': {'ok': 'good'}}
         assert response.status_code == 200
 
     @mock.patch('aggregator.views.get_aggregated_news')
     def test_get_aggregated_news_notimplemented(self, mock_agg_news):
         mock_agg_news.side_effect = NotImplementedError('nie')
-        response = self.client.get('/news/')
+        response = client.get('/news/')
 
-        assert response.data == 'Error: nie'
+        assert response.content == b'Error: nie'
         assert response.status_code == 500
 
     @mock.patch('aggregator.views.get_aggregated_news')
     def test_get_aggregated_news_unhandled_exception(self, mock_agg_news):
         mock_agg_news.side_effect = Exception('Boom Boom!!')
-        response = self.client.get('/news/')
+        response = client.get('/news/')
 
-        assert response.data == 'Something went wrong, please try again'
+        assert response.content == b'Something went wrong, please try again.'
         assert response.status_code == 500
 
 
-class AggregatedNewsTest(TestCase):
+class AggregatedNewsTest(SimpleTestCase):
 
     @mock.patch('aggregator.views.get_news_from_reddit')
     @mock.patch('aggregator.views.get_news_from_newsapi')
@@ -70,7 +72,7 @@ class AggregatedNewsTest(TestCase):
         self.assertRaises(NotImplementedError, views.get_aggregated_news, item_count=51)
 
 
-class RedditAPITest(TestCase):
+class RedditAPITest(SimpleTestCase):
 
     @mock.patch('requests.auth.HTTPBasicAuth')
     @mock.patch('requests.post')
@@ -138,7 +140,7 @@ class RedditAPITest(TestCase):
                ("https://oauth.reddit.com/r/news/search?q=bitcoin",)
 
 
-class NewsAPITest(TestCase):
+class NewsAPITest(SimpleTestCase):
 
     @mock.patch('aggregator.views._get_newsapi_token')
     @mock.patch('requests.get')

@@ -4,30 +4,25 @@ import itertools
 from collections import OrderedDict
 
 import requests
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from rest_framework.status import HTTP_500_INTERNAL_SERVER_ERROR, HTTP_200_OK
+from django.http.response import JsonResponse, HttpResponseServerError
 
 from django.conf import settings
 
 
-USER_AGENT = "Python:meddy-assignment:v0.1 (by Shiva Kumar)"
+USER_AGENT = "Python:meddy-news:v0.1 (by Shiva Kumar)"
 
 
-@api_view(['GET'])
 def get_news(request):
-    query = request.query_params.get('query', None)
+    query = request.GET.get('query')
     try:
         data = get_aggregated_news(query)
-        status = HTTP_200_OK
+        return JsonResponse({'news': data})
     except NotImplementedError as e:
         data = 'Error: ' + str(e)
-        status = HTTP_500_INTERNAL_SERVER_ERROR
     except:  # noqa: E722
-        data = 'Something went wrong, please try again'
-        status = HTTP_500_INTERNAL_SERVER_ERROR
+        data = 'Something went wrong, please try again.'
 
-    return Response(data=data, status=status)
+    return HttpResponseServerError(data)
 
 
 def get_aggregated_news(query=None, item_count=5):
@@ -43,7 +38,7 @@ def get_aggregated_news(query=None, item_count=5):
     generators = itertools.cycle([reddit_generator, newsapi_generator])
 
     news = []
-    links = []  # To discard news items listed by both reddit and newsapi
+    links = []  # Discard news items listed by both reddit and newsapi
     while len(news) < item_count:
         news_item = next(next(generators))
         if news_item['link'] not in links:
@@ -63,8 +58,7 @@ def get_news_from_reddit(query=None):
 
     response = requests.get(url, headers=headers)
 
-    results = response.json()['data']['children']  # 25 items
-    print("RedditAPI response: ", response.status_code)
+    results = response.json()['data']['children']  # Each call returns 25 items
 
     for item in results:
         data = item['data']
@@ -98,7 +92,6 @@ def get_news_from_newsapi(query=None):
 
     headers = {"User-Agent": USER_AGENT}
     response = requests.get(url, headers=headers)
-    print("NewsAPI response: ", response.status_code)
     results = response.json()['articles']
 
     for item in results:
@@ -128,7 +121,6 @@ def _get_reddit_token():
     response = requests.post("https://www.reddit.com/api/v1/access_token",
                              auth=client_auth, data=post_data, headers=headers)
 
-    print("RedditAPI token response: ", response.status_code)
     token = response.json()['access_token']
     return token
 
