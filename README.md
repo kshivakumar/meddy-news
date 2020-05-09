@@ -1,17 +1,24 @@
 # A Simple Django application that lists top news items from NewsAPI and Reddit(/r/news)
 
-**Environment Setup (Python 3)** 
-1. Create and activate virtualenv  
+## Setup
+### Docker
+1. Build the image  
+`docker build -t meddy-news https://github.com/kshivakumar/meddy-news.git#master:.`
+2. Launch the container(and the application)   
+`docker run -p 8005:8005 meddy-news`
+
+### Local 
+1. Create(in a separate directory) and activate virtualenv  
   a. `virtualenv mnvenv` or `python3 -m venv mnvenv`  
   b. `source mnvenv/bin/activate`  
 2. Install the requirements - `pip install -r requirements.txt`  
-3. Start Django Dev Server - `python manage.py runserver 0:8000`  
+3. Start Django Dev Server - `python manage.py runserver 0:8005`  
 
 Optional:    
 - Run test cases - `python manage.py test`  
 - PEP8 checks - `flake8 aggregator --exclude=migrations --exclude=tests.py`
 
-**Usage**
+## Usage
 1. Using browser  
 Go to `localhost:8000/news/`
 
