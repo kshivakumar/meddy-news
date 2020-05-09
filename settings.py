@@ -106,9 +106,11 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 
-REDDIT_USERNAME = os.environ['REDDIT_USERNAME']
-REDDIT_PASSWORD = os.environ['REDDIT_PASSWORD']
-REDDIT_CLIENTID = os.environ['REDDIT_CLIENTID']
-REDDIT_SECRET = os.environ['REDDIT_SECRET']
+# The below tokens/screts were created using a temp email.
+# Intentionally hard-coded for easy setup(no env vars)
+REDDIT_USERNAME = 'skmycom'
+REDDIT_PASSWORD = 'DF@#a14saf43'
+REDDIT_CLIENTID = 'jwqgfZ80XhQL8A'
+REDDIT_SECRET = 'CFmynsMi7tNdEo98arPy2YN9eDA' 
 
-NEWSAPI_TOKEN = os.environ['NEWSAPI_TOKEN']
+NEWSAPI_TOKEN = '86df486541ca48c9806dfb3862beb1f4'
