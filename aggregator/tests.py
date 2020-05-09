@@ -4,7 +4,7 @@ from unittest import mock
 
 from django.test import SimpleTestCase, Client
 
-from . import views
+from aggregator import views
 
 
 client = Client()
@@ -53,7 +53,6 @@ class AggregatedNewsTest(SimpleTestCase):
     def test_get_aggregated_news(self, mock_newsapi, mock_reddit):
         mock_newsapi.return_value = ({'link': l} for l in ['n1', 'n2'])
         mock_reddit.return_value = ({'link': l} for l in ['r1', 'r2'])
-
         actual = views.get_aggregated_news(item_count=4)
 
         assert actual == [{'link': 'r1'}, {'link': 'n1'}, {'link': 'r2'}, {'link': 'n2'}]
