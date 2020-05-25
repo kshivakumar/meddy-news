@@ -5,7 +5,11 @@
 1. Build the image  
 `docker build -t meddy-news https://github.com/kshivakumar/meddy-news.git#master:.`
 2. Launch the container(and the application)   
-`docker run -p 8005:8005 meddy-news`
+`docker run -p 8005:8005 meddy-news`  
+
+Optional:
+- Run test cases - `docker run -t --rm meddy-news:latest python manage.py test`
+- PEP8 checks - `docker run -t --rm meddy-news:latest flake8 src/aggregator --exclude=migrations --exclude=tests.py`
 
 ### Local 
 1. Create(in a separate directory) and activate virtualenv  
